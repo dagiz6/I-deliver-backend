@@ -1,9 +1,11 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard, Roles } from '@thallesp/nestjs-better-auth';
+import { ArcjetGuard, WithArcjetRules, shield } from '@arcjet/nest';
 import { UserService } from './user.service';
 
 @Controller('user')
-@UseGuards(AuthGuard)
+@UseGuards(ArcjetGuard, AuthGuard)
+@WithArcjetRules([shield({ mode: 'LIVE' })])
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
