@@ -20,4 +20,34 @@ export const auth = betterAuth({
   trustedOrigins: [
     'http://localhost:3000',
   ],
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        required: false,
+        defaultValue: 'CUSTOMER',
+        input: true,
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          // Force role to CUSTOMER or DELIVERY_PARTNER only.
+          // Block ADMIN self-assignment during public registration.
+          let assignedRole = user.role;
+          if (assignedRole !== 'DELIVERY_PARTNER' && assignedRole !== 'CUSTOMER') {
+            assignedRole = 'CUSTOMER';
+          }
+          return {
+            data: {
+              ...user,
+              role: assignedRole,
+            },
+          };
+        },
+      },
+    },
+  },
 });
