@@ -13,16 +13,23 @@ enum Role {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String          @unique
+  phoneNumber   String?         @unique
+  emailVerified Boolean         @default(false)
   image         String?
-  role          Role      @default(CUSTOMER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  role          Role            @default(CUSTOMER)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   sessions      Session[]
   accounts      Account[]
+  payoutAccounts PayoutAccount[]
+  addresses     Address[]
+  reviewsGiven  Review[]        @relation("ReviewsGiven")
+  reviewsReceived Review[]      @relation("ReviewsReceived")
+  customerOrders Order[]        @relation("CustomerOrders")
+  deliveryOrders Order[]        @relation("DeliveryPartnerOrders")
 
   @@map("user")
 }
@@ -71,3 +78,79 @@ model Verification {
 
   @@map("verification")
 }
+
+enum PayoutAccountType {
+  BANK
+  MOBILE_MONEY
+}
+
+model PayoutAccount {
+  id            String            @id @default(cuid())
+  userId        String
+  accountType   PayoutAccountType
+  provider      String            // e.g. Telebirr, CBE, Awash Bank
+  accountName   String
+  accountNumber String
+  isPrimary     Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payout_account")
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  label      String   // e.g. Home, Work
+  street     String
+  city       String
+  state      String?
+  postalCode String?
+  country    String   @default("Ethiopia")
+  latitude   Float?
+  longitude  Float?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("address")
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  reviewerId  String
+  revieweeId  String
+  orderId     String?
+  rating      Int      // 1 to 5
+  comment     String?
+  createdAt   DateTime @default(now())
+  reviewer    User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee    User     @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  @@map("review")
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  customerId        String
+  deliveryPartnerId String?
+  status            OrderStatus @default(PENDING)
+  title             String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  customer          User        @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Cascade)
+  deliveryPartner   User?       @relation("DeliveryPartnerOrders", fields: [deliveryPartnerId], references: [id], onDelete: SetNull)
+
+  @@map("order")
+}
+
