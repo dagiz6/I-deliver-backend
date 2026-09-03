@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ArcjetGuard } from '@arcjet/nest';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { ArcjetModule } from './lib/arcjet/arcjet.module';
 import { CloudinaryModule } from './lib/cloudinary/cloudinary.module';
 import { PrismaModule } from './lib/database/prisma.module';
@@ -26,6 +27,11 @@ import { UserModule } from './module/user/user.module';
       provide: APP_GUARD,
       useClass: ArcjetGuard,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
   ],
 })
 export class AppModule {}
+

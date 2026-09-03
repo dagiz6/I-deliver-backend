@@ -9,16 +9,15 @@ import {
   Post,
   Put,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard, Roles, Session } from '@thallesp/nestjs-better-auth';
+import { AllowAnonymous, Roles, Session } from '@thallesp/nestjs-better-auth';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
-import { ArcjetGuard, WithArcjetRules, shield } from '@arcjet/nest';
+import { WithArcjetRules, shield } from '@arcjet/nest';
 import { UserService } from './user.service';
 import {
   CreateAddressDto,
@@ -29,7 +28,6 @@ import {
 } from './dto';
 
 @Controller('user')
-@UseGuards(ArcjetGuard, AuthGuard)
 @WithArcjetRules([shield({ mode: 'LIVE' })])
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -137,11 +135,13 @@ export class UserController {
     return this.userService.deleteAddress(session.user.id, addressId);
   }
 
+  @AllowAnonymous()
   @Get('delivery-guy/:id/public-profile')
   async getDeliveryGuyPublicProfile(@Param('id') id: string) {
     return this.userService.getDeliveryGuyPublicProfile(id);
   }
 
+  @AllowAnonymous()
   @Get(':id/public-profile')
   async getPublicProfile(@Param('id') id: string) {
     return this.userService.getPublicProfile(id);
