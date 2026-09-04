@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: i-deliver-backend
+    env: node
+    buildCommand: NODE_OPTIONS="--max-old-space-size=2048" npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=2048
