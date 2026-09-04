@@ -8,6 +8,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "prisma generate && nest build",
+    "render-build": "NODE_OPTIONS=--max-old-space-size=1024 prisma generate && NODE_OPTIONS=--max-old-space-size=1024 nest build",
     "vercel-build": "prisma generate && nest build",
     "postinstall": "prisma generate",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
