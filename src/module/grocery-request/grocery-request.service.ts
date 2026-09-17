@@ -90,6 +90,10 @@ export class GroceryRequestService {
   // FR-14: Create Request with Budget Ceiling
   // ==========================================
   async createRequest(posterId: string, dto: CreateGroceryRequestDto) {
+    if (!dto || !dto.items || !Array.isArray(dto.items) || dto.items.length === 0) {
+      throw new BadRequestException('At least one grocery item is required in the "items" list');
+    }
+
     const poster = await this.prisma.user.findUnique({
       where: { id: posterId },
     });

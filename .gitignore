@@ -42,7 +42,7 @@ AGENTS.md
 .claude
 .windsurf
 skills-lock.json
-
+docs
 
 # dotenv environment variable files
 .env

@@ -82,6 +82,16 @@ describe('GroceryRequestService', () => {
       expect(prisma.requestStatusLog.create).toHaveBeenCalled();
     });
 
+    it('should throw BadRequestException when items array is missing or empty', async () => {
+      await expect(
+        service.createRequest('user-1', {} as any),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        service.createRequest('user-1', { items: [] } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('should create DIRECT_PENDING request when targetShopperId is provided (FR-16)', async () => {
       prisma.user.findUnique
         .mockResolvedValueOnce({ id: 'user-1', role: Role.CUSTOMER })
