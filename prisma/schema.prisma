@@ -32,6 +32,14 @@ model User {
   customerOrders Order[]        @relation("CustomerOrders")
   deliveryOrders Order[]        @relation("DeliveryPartnerOrders")
 
+  isAvailableForDelivery Boolean        @default(false)
+  currentLatitude        Float?
+  currentLongitude       Float?
+  lastLocationUpdatedAt  DateTime?
+  postedRequests         GroceryRequest[] @relation("PosterRequests")
+  shopperRequests        GroceryRequest[] @relation("ShopperRequests")
+  targetShopperRequests  GroceryRequest[] @relation("TargetShopperRequests")
+
   @@map("user")
 }
 
@@ -154,4 +162,107 @@ model Order {
 
   @@map("order")
 }
+
+enum RequestStatus {
+  OPEN
+  DIRECT_PENDING
+  ACCEPTED
+  SHOPPING
+  OVER_BUDGET_PENDING
+  SHOPPING_COMPLETED
+  IN_TRANSIT
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum OverBudgetResolution {
+  APPROVED_INCREASE
+  INSTRUCTED_REMOVE_ITEMS
+  AUTO_TIMEOUT_DEFAULT
+}
+
+model GroceryRequest {
+  id                    String                @id @default(cuid())
+  posterId              String
+  shopperId             String?
+  targetShopperId       String?
+
+  // Budget & Fees (FR-14)
+  budgetCeiling         Float
+  originalBudgetCeiling Float
+  deliveryFee           Float
+  actualSpent           Float?
+  receiptUrl            String?
+
+  // Location & Schedule (FR-14)
+  deliveryAddress       String
+  deliveryLatitude      Float
+  deliveryLongitude     Float
+  deadline              DateTime?
+
+  // Lifecycle & State (FR-18)
+  status                RequestStatus         @default(OPEN)
+  directRequestExpiresAt DateTime?
+  deliveredAt           DateTime?
+  autoDeliveryConfirmAt DateTime?
+
+  // Over-budget Handling (FR-19, FR-20)
+  proposedOverBudgetAmount Float?
+  overBudgetReason      String?
+  overBudgetExpiresAt   DateTime?
+  overBudgetResolution  OverBudgetResolution?
+
+  // Cancellation & Disputes (FR-23, FR-24)
+  cancellationReason    String?
+  cancelledById         String?
+  cancelledAt           DateTime?
+  isDisputed            Boolean               @default(false)
+  disputeReason         String?
+  disputedById          String?
+  disputedAt            DateTime?
+  escrowFrozen          Boolean               @default(false)
+
+  // Items and logs
+  items                 GroceryItem[]
+  statusLogs            RequestStatusLog[]
+
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  poster                User                  @relation("PosterRequests", fields: [posterId], references: [id], onDelete: Cascade)
+  shopper               User?                 @relation("ShopperRequests", fields: [shopperId], references: [id], onDelete: SetNull)
+  targetShopper         User?                 @relation("TargetShopperRequests", fields: [targetShopperId], references: [id], onDelete: SetNull)
+
+  @@map("grocery_request")
+}
+
+model GroceryItem {
+  id             String         @id @default(cuid())
+  requestId      String
+  name           String
+  quantity       Int            @default(1)
+  unit           String?
+  estimatedPrice Float?
+  notes          String?
+  isRemoved      Boolean        @default(false)
+  groceryRequest GroceryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("grocery_item")
+}
+
+model RequestStatusLog {
+  id          String         @id @default(cuid())
+  requestId   String
+  fromStatus  RequestStatus?
+  toStatus    RequestStatus
+  changedById String?
+  note        String?
+  createdAt   DateTime       @default(now())
+  request     GroceryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@map("request_status_log")
+}
+
 
